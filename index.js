@@ -50,7 +50,7 @@ const flatten = (arr) => {
  * @typedef productSearchResult
  * Contains the results of a product search
  *
- * @param {string} ack - 'Success' for operation success ('Fail' for failure? not tested)
+ * @param {string} ack - 'Failure' for operation success
  * @param {string} version - Version number of API response - ex: 1.13.0
  * @param {string} timestamp - UTC string timestamp of response
  * @param {integer} searchResultCount - number of results found (may be different from searchResult.length, via pagination)
@@ -96,15 +96,19 @@ const findItemsByProduct = (type, id, other = {}) => {
                     itemSearchURL,
                 } = response;
 
-                resolve({
-                    ack,
-                    version,
-                    timestamp,
-                    searchResultCount: parseInt(searchResult['@count'], 10),
-                    searchResult: searchResult.item.map(flatten),
-                    paginationOutput,
-                    itemSearchUrl: itemSearchURL,
-                });
+                if (ack === 'Failure') {
+                    reject(response);
+                } else {
+                    resolve({
+                        ack,
+                        version,
+                        timestamp,
+                        searchResultCount: parseInt(searchResult['@count'], 10),
+                        searchResult: searchResult.item.map(flatten),
+                        paginationOutput,
+                        itemSearchUrl: itemSearchURL,
+                    });
+                }
             }
         });
     });
