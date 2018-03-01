@@ -1,0 +1,14 @@
+{
+  "name": "ebay-find-api",
+  "version": "1.0.0",
+  "description": "ebay find api",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Eric Blade",
+  "license": "MIT",
+  "dependencies": {
+    "ebay": "0.0.1"
+  }
+}
