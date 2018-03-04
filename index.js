@@ -104,7 +104,7 @@ const findItemsByProduct = (type, id, other = {}) => {
                         version,
                         timestamp,
                         searchResultCount: parseInt(searchResult['@count'], 10),
-                        searchResult: searchResult.item.map(flatten),
+                        searchResult: searchResult.item ? searchResult.item.map(flatten) : [],
                         paginationOutput,
                         itemSearchUrl: itemSearchURL,
                     });
