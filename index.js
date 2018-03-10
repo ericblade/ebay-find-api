@@ -89,6 +89,12 @@ const findItemsByProduct = (type, id, other = {}) => {
             } else {
                 const { findItemsByProductResponse: response } = flatten(data);
 
+                if (!response) {
+                    // Sometimes, a response will come back 100% empty. That's not awesome.
+                    reject(new Error('eBay Response Empty'));
+                    return;
+                }
+
                 const {
                     ack,
                     version,
