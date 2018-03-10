@@ -1,5 +1,7 @@
 const Ebay = require('ebay');
 
+const forceArray = arr => [].concat(arr !== undefined ? arr : []);
+
 let ebay = null;
 /**
  * Initialize ebay-find-api
@@ -95,6 +97,9 @@ const findItemsByProduct = (type, id, other = {}) => {
                     paginationOutput,
                     itemSearchURL,
                 } = response;
+
+                if (searchResult && searchResult.item)
+                    searchResult.item = forceArray(searchResult.item);
 
                 if (ack === 'Failure') {
                     reject(response);
