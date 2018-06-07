@@ -17,12 +17,28 @@ const init = ({ appId }) => {
 
 // list of find operations: http://developer.ebay.com/devzone/finding/CallRef/index.html
 
+const findOperations = [
+    'findCompletedItems',
+    'findItemsAdvanced',
+    'findItemsByCategory',
+    'findItemsByKeywords',
+    'findItemsByProduct',
+    'findItemsIneBayStores',
+    'getHistograms',
+    'getSearchKeywordsRecommendation',
+    'getVersion',
+];
+
+const validOperation = op => findOperations.includes(op);
+
 const productIdTypes = [
     'ReferenceID',
     'ISBN',
     'UPC',
     'EAN',
 ];
+
+const validProductIdType = type => productIdTypes.includes(type);
 
 /**
  * Simple flatten object of arrays to flat object, stops when hits array.length !== 1
@@ -61,6 +77,62 @@ const flatten = (arr) => {
  * @param {string} intemSearchUrl - the URL to perform the same search on the eBay site
  */
 
+const findCall = operation => parser => baseParams => other => {
+    if (!validOperation(operation)) {
+        throw new Error(`invalid operation ${operation} use one of [${findOperations.join(' ')}]`);
+    }
+    return new Promise((resolve, reject) => {
+        const params = {
+            ...other,
+            'OPERATION-NAME': operation,
+            ...baseParams,
+        };
+        ebay.get('finding', params, (err, data) => {
+            if (err) {
+                reject(err);
+            } else {
+                const { [`${operation}Response`]: response } = flatten(data);
+                if (!response) {
+                    // Sometimes, a response will come back 100% empty. Not cool.
+                    reject(new Error('eBay Response Empty'));
+                    return;
+                }
+                resolve(response);
+            }
+        });
+    }).then(response => parser(response));
+};
+
+const findByProductParser = (response) => {
+    const {
+        ack, version, timestamp, searchResult, paginationOutput, itemSearchURL,
+    } = response;
+
+    if (searchResult && searchResult.item) {
+        searchResult.item = forceArray(searchResult.item);
+    }
+
+    if (ack === 'Failure') {
+        throw response;
+    }
+    return ({
+        ack,
+        version,
+        timestamp,
+        searchResultCount: parseInt(searchResult['@count'], 10) || 0,
+        searchResult: searchResult && searchResult.item ? searchResult.item.map(flatten) : [],
+        paginationOutput,
+        itemSearchUrl: itemSearchURL,
+    });
+};
+
+const callFindByProduct = ({ type, id }) => {
+    if (!validProductIdType(type)) {
+        throw new Error(`unknown type ${type}, use one of [${productIdTypes.join(' ')}]`);
+    }
+    return findCall('findItemsByProduct')(findByProductParser)({ 'productId.@type': type, productId: id });
+}
+
 /**
  * Search for items based on product identifier
  *
@@ -69,61 +141,13 @@ const flatten = (arr) => {
  * @param {object} other - other parameters to supply, see http://developer.ebay.com/devzone/finding/CallRef/findItemsByProduct.html
  * @returns {productSearchResult} - product search results
  */
+
 const findItemsByProduct = (type, id, other = {}) => {
-    if (!ebay) {
-        throw new Error('call ebay-find-api init first');
+    if (!id) {
+        return lookupId => callFindByProduct({ type, id: lookupId });
     }
-    if (!productIdTypes.includes(type)) {
-        throw new Error(`unknown type ${type}, use ReferenceID, ISBN, UPC, or EAN`);
-    }
-    return new Promise((resolve, reject) => {
-        const params = {
-            ...other,
-            'OPERATION-NAME': 'findItemsByProduct',
-            'productId.@type': type,
-            productId: id,
-        };
-        ebay.get('finding', params, (err, data) => {
-            if (err) {
-                reject(err);
-            } else {
-                const { findItemsByProductResponse: response } = flatten(data);
-
-                if (!response) {
-                    // Sometimes, a response will come back 100% empty. That's not awesome.
-                    reject(new Error('eBay Response Empty'));
-                    return;
-                }
-
-                const {
-                    ack,
-                    version,
-                    timestamp,
-                    searchResult,
-                    paginationOutput,
-                    itemSearchURL,
-                } = response;
-
-                if (searchResult && searchResult.item)
-                    searchResult.item = forceArray(searchResult.item);
-
-                if (ack === 'Failure') {
-                    reject(response);
-                } else {
-                    resolve({
-                        ack,
-                        version,
-                        timestamp,
-                        searchResultCount: parseInt(searchResult['@count'], 10) || 0,
-                        searchResult: searchResult && searchResult.item ? searchResult.item.map(flatten) : [],
-                        paginationOutput,
-                        itemSearchUrl: itemSearchURL,
-                    });
-                }
-            }
-        });
-    });
-};
+    return callFindByProduct({ type, id })(other);
+}
 
 /**
  * Search for items based on product UPC code
@@ -131,10 +155,19 @@ const findItemsByProduct = (type, id, other = {}) => {
  * @param {string} upc - product upc code
  * @param {object} other - other parameters, see http://developer.ebay.com/devzone/finding/CallRef/findItemsByProduct.html
  */
-const findItemsByUpc = findItemsByProduct.bind(this, 'UPC');
+const findItemsByUpc = (upc, other) => findItemsByProduct('UPC')(upc)(other);
+
+const findItemsByReferenceId = (refId, other) => findItemsByProduct('ReferenceID')(refId)(other);
+
+const findItemsByIsbn = (isbn, other) => findItemsByProduct('ISBN')(isbn)(other);
+
+const findItemsByEan = (ean, other) => findItemsByProduct('EAN')(ean)(other);
 
 module.exports = {
     init,
     findItemsByProduct,
     findItemsByUpc,
+    findItemsByReferenceId,
+    findItemsByIsbn,
+    findItemsByEan,
 };
