@@ -133,6 +133,10 @@ const callFindByProduct = ({ type, id }) => {
     return findCall('findItemsByProduct')(findByProductParser)({ 'productId.@type': type, productId: id });
 }
 
+const callFindItemsAdvanced = str => {
+    return findCall('findItemsAdvanced')(findByProductParser)({ descriptionSearch: true, keywords: str });
+}
+
 /**
  * Search for items based on product identifier
  *
@@ -163,8 +167,11 @@ const findItemsByIsbn = (isbn, other) => findItemsByProduct('ISBN')(isbn)(other)
 
 const findItemsByEan = (ean, other) => findItemsByProduct('EAN')(ean)(other);
 
+const findItemsByKeywords = (keywords, other) => callFindItemsAdvanced(keywords)(other);
+
 module.exports = {
     init,
+    findItemsByKeywords,
     findItemsByProduct,
     findItemsByUpc,
     findItemsByReferenceId,
