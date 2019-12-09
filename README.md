@@ -1,5 +1,7 @@
 # ebay-find-api
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/ericblade/ebay-find-api.svg)](https://greenkeeper.io/)
+
 Simple wrapper for 'ebay' module, mostly to give it a far less generic name, since all it does
 is implement part of the 'finding' part of the eBay API.
 
