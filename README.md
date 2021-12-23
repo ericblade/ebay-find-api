@@ -1,4 +1,4 @@
-# ebay-find-api
+# DEPRECATED: ebay-find-api
 
 Simple wrapper for 'ebay' module, mostly to give it a far less generic name, since all it does
 is implement part of the 'finding' part of the eBay API.
@@ -11,3 +11,5 @@ here, feel free to request it, or implement it and send a pull request.
 
 Thanks!
 Have a great day!
+
+THIS API IS NO LONGER AVAILABLE AT EBAY, AND THIS REPOSITORY IS DEPRECATED.
