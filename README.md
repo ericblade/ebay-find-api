@@ -12,4 +12,4 @@ here, feel free to request it, or implement it and send a pull request.
 Thanks!
 Have a great day!
 
-THIS API IS NO LONGER AVAILABLE AT EBAY, AND THIS REPOSITORY IS DEPRECATED.
+February 2025: THIS API IS NO LONGER AVAILABLE AT EBAY, AND THIS REPOSITORY IS DEPRECATED.
